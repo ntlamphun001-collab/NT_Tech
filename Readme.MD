@@ -330,6 +330,6 @@ HTDOCS/
 
 ---
 
-**พัฒนาโดย**: Claude (SQL Version)  
+**พัฒนาโดย**: Thanika Charoensuk 
 **วันที่**: 2026  
 **เวอร์ชัน**: 2.0 (SQL-based)
