@@ -1,0 +1,224 @@
+/* ============================================
+   login.css — Full BG + กล่องกลางจอทุกขนาด
+============================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: 'Prompt', sans-serif;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* พื้นหลัง */
+.bg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+}
+.bg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
+    pointer-events: none;
+}
+
+/* ===============================
+   Container
+   จอใหญ่ → ชิดซ้าย (margin-left บน .left-box)
+   จอเล็ก → กลางจอ (จาก @media)
+================================*/
+.container {
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100vh;
+    padding: 0;
+    z-index: 10;
+}
+
+/* ===============================
+   กล่องฟอร์ม — ใหญ่ขึ้น
+================================*/
+.left-box {
+    display: flex;
+    flex-direction: column;
+    width: clamp(270px, 28vw, 360px);   /* ใหญ่ขึ้น */
+    margin-left: 13vw;                  /* 🎯 ปรับซ้าย-ขวาตรงนี้ */
+    padding: 28px 32px 30px;           /* padding ใหญ่ขึ้น */
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 36px rgba(0,0,0,0.15);
+}
+
+/* Icon ใหญ่ขึ้น */
+.user-icon {
+    width: 80px;                        /* ใหญ่ขึ้นจาก 54px */
+    display: block;
+    margin: 0 auto 10px;
+}
+
+/* หัวข้อ */
+.left-box h1 {
+    text-align: center;
+    font-size: clamp(22px, 2.2vw, 30px);  /* ใหญ่ขึ้น */
+    margin: 0 0 4px;
+    color: #1a1a1a;
+    line-height: 1.2;
+}
+
+.left-box h2 {
+    text-align: center;
+    font-size: clamp(12px, 1vw, 14px);    /* ใหญ่ขึ้น */
+    color: #888;
+    margin: 0 0 20px;
+    font-weight: 400;
+}
+
+/* Label */
+label {
+    font-size: clamp(14px, 1.2vw, 17px);  /* ใหญ่ขึ้น */
+    display: block;
+    margin: 0 0 4px;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Input */
+.input {
+    width: 100%;
+    display: block;
+    margin: 0 0 18px;
+    padding: 8px 4px;
+    font-size: clamp(14px, 1.1vw, 16px);  /* ใหญ่ขึ้น */
+    font-family: 'Prompt', sans-serif;
+    border: none;
+    border-bottom: 2.5px solid #FFC42A;
+    background: transparent;
+    outline: none;
+    color: #1a1a1a;
+    transition: border-color 0.2s;
+}
+.input:focus { border-bottom-color: #e6a800; }
+.input::placeholder { color: #ccc; font-size: clamp(13px, 1vw, 15px); }
+
+/* ปุ่มหลัก */
+.login-btn {
+    background: #FFC42A;
+    border: none;
+    padding: 13px;
+    width: 85%;
+    display: block;
+    margin: 14px auto 0;
+    color: #000;
+    font-size: clamp(15px, 1.3vw, 18px);  /* ใหญ่ขึ้น */
+    font-family: 'Prompt', sans-serif;
+    font-weight: 700;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 3px 14px rgba(255,196,42,0.4);
+}
+.login-btn:hover { transform: scale(1.04); box-shadow: 0 5px 20px rgba(255,196,42,0.5); }
+
+/* ปุ่ม Register */
+.register-btn {
+    background: transparent;
+    border: 2px solid #FFC42A;
+    padding: 11px;
+    width: 85%;
+    display: block;
+    margin: 8px auto 0;
+    color: #b8860b;
+    font-size: clamp(13px, 1.1vw, 16px);
+    font-family: 'Prompt', sans-serif;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+.register-btn:hover { background: #FFC42A; color: #000; transform: scale(1.04); }
+
+/* ปุ่ม Back */
+.back-btn {
+    background: transparent;
+    border: none;
+    color: #999;
+    font-size: clamp(11px, 0.9vw, 13px);
+    font-family: 'Prompt', sans-serif;
+    cursor: pointer;
+    margin: 10px auto 0;
+    display: block;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+.back-btn:hover { color: #444; }
+
+/* ซ่อนของเดิมที่ไม่ใช้ */
+.right-box, .people, .circle, .icon-item,
+.bg-yellow, .bg-city { display: none !important; }
+
+/* ===============================
+   Responsive — จอกลาง (≤ 1100px)
+   เริ่มเลื่อนมากลาง
+================================*/
+@media (max-width: 1100px) {
+    .container {
+        justify-content: center;   /* กลางจอ */
+    }
+    .left-box {
+        margin-left: 0;            /* ยกเลิก margin-left ซ้าย */
+        width: clamp(300px, 55vw, 420px);
+    }
+}
+
+/* ===============================
+   Responsive — Tablet (≤ 768px)
+================================*/
+@media (max-width: 768px) {
+    .left-box {
+        width: clamp(280px, 80vw, 400px);
+        padding: 24px 26px 26px;
+    }
+}
+
+/* ===============================
+   Responsive — Mobile (≤ 540px)
+================================*/
+@media (max-width: 540px) {
+    body { overflow-y: auto; height: auto; min-height: 100vh; }
+    .bg { object-fit: cover; }
+
+    .container {
+        min-height: 100vh;
+        justify-content: center;
+        align-items: center;
+        padding: 24px 16px;
+    }
+    .left-box {
+        width: 100%;
+        max-width: 360px;
+        padding: 22px 20px 24px;
+        margin-left: 0;
+    }
+    .login-btn, .register-btn { width: 90%; }
+}
+
+/* ===============================
+   Landscape จอสูงน้อย (≤ 540px height)
+================================*/
+@media (max-height: 540px) {
+    .user-icon { width: 46px; margin-bottom: 4px; }
+    .left-box { padding: 12px 24px 14px; }
+    .left-box h1 { font-size: 16px; }
+    .left-box h2 { margin-bottom: 8px; font-size: 10px; }
+    .input { margin-bottom: 8px; padding: 4px 2px; }
+    .login-btn, .register-btn { padding: 8px; margin-top: 6px; }
+}

@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property - NT Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="devtools-guard.js" onerror="void(0)"></script>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+    /* ─── Summary Cards (เหมือน style stats-container ใน index) ─── */
+    .prop-stats {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+        padding: 5px;
+    }
+    @media(max-width:1200px){ .prop-stats{ grid-template-columns: repeat(3,1fr); } }
+    @media(max-width:768px) { .prop-stats{ grid-template-columns: repeat(2,1fr); } }
+
+    .ps-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .ps-card:hover { transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .ps-card.no-click { cursor: default; }
+    .ps-card.no-click:hover { transform: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .ps-icon {
+        width: 60px; height: 60px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 28px; flex-shrink: 0;
+    }
+    .ps-label { font-size: 14px; color: #666; margin-bottom: 5px; font-weight: 500; }
+    .ps-value { font-size: 32px; font-weight: bold; color: #333; line-height: 1; }
+
+    /* ─── Status Badge ─── */
+    .sbadge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .sb-inuse  { background:#d4edda; color:#155724; }
+    .sb-vacant { background:#fff3cd; color:#856404; }
+    .sb-rent   { background:#cce5ff; color:#004085; }
+    .sb-other  { background:#e2e3e5; color:#383d41; }
+
+    /* ─── Filter Pills ─── */
+    .pill-bar { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:12px; }
+    .fpill {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        border: 1.5px solid #ddd;
+        background: #fff;
+        transition: all .15s;
+        user-select: none;
+    }
+    .fpill.active, .fpill:hover {
+        background: #FFD101;
+        border-color: #FFD101;
+        font-weight: 700;
+    }
+
+    /* ─── Table Row ─── */
+    #propTbody tr { cursor: pointer; }
+    #propTbody tr:hover td { background: #fffbea; }
+    #propTbody td {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    #propTbody td:nth-child(2) { max-width: 260px; }
+
+    /* ─── Import Drop Zone ─── */
+    .import-zone {
+        border: 2px dashed #c8d0da;
+        border-radius: 10px;
+        padding: 44px 20px;
+        text-align: center;
+        margin-bottom: 18px;
+        cursor: pointer;
+        transition: border-color .2s, background .2s;
+    }
+    .import-zone:hover { border-color: #FFD101; background: #fffef0; }
+    .import-zone.hidden { display: none; }
+
+    /* ─── Image Popup Modal ─── */
+    #imgModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:5000; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    #imgModal.open { display:flex; }
+    #imgModalBox { background:#fff; border-radius:16px; padding:24px; max-width:640px; width:92%; max-height:90vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,0.35); }
+    #imgModalTitle { font-weight:700; font-size:15px; color:#1a3a5c; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; }
+    .img-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:10px; }
+    .img-thumb { border-radius:8px; overflow:hidden; cursor:zoom-in; border:2px solid transparent; transition:all .2s; }
+    .img-thumb:hover { border-color:#3b82f6; transform:scale(1.03); box-shadow:0 4px 16px rgba(0,0,0,0.2); }
+    .img-thumb img { width:100%; height:115px; object-fit:cover; display:block; }
+    .img-thumb-name { font-size:11px; color:#64748b; padding:4px 7px; background:#f8fafc; }
+    .img-hint { font-size:11px; color:#94a3b8; text-align:center; margin-top:10px; }
+    #imgFullscreen { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.96); z-index:6000; align-items:center; justify-content:center; cursor:zoom-out; }
+    #imgFullscreen.open { display:flex; }
+    #imgFullscreen img { max-width:96vw; max-height:96vh; object-fit:contain; border-radius:6px; }
+    .btn-img { background:linear-gradient(135deg,#3b82f6,#1d4ed8); color:#fff; border:none; border-radius:6px; padding:4px 11px; font-size:11px; cursor:pointer; font-weight:600; box-shadow:0 2px 6px rgba(59,130,246,.35); transition:transform .15s; }
+    .btn-img:hover { transform:translateY(-1px); }
+    .btn-ed { background:#f39c12; color:#fff; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; }
+    .btn-dl { background:#e74c3c; color:#fff; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px; margin-left:4px; }
+    .btn-ed:hover { background:#d68910; }
+    .btn-dl:hover { background:#c0392b; }
+    .admin-only { display:none; }
+
+    /* ─── Modal Overlay ─── */
+    .modal-ovl {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.52);
+        z-index: 3000;
+        overflow-y: auto;
+    }
+    .modal-ovl.open {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 28px 12px;
+    }
+    .modal-box {
+        background: #fff;
+        border-radius: 14px;
+        padding: 28px 32px;
+        width: 90%;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.28);
+        animation: mUp .22s ease;
+    }
+    @keyframes mUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .modal-box.wide { max-width: 700px; }
+    .modal-box.xwide { max-width: 820px; }
+    .mhead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #FFD101;
+        padding-bottom: 11px;
+        margin-bottom: 18px;
+    }
+    .mhead h3 { margin:0; font-size:16px; display:flex; align-items:center; gap:8px; }
+    .mclose { cursor:pointer; font-size:26px; color:#bbb; line-height:1; transition:color .15s; }
+    .mclose:hover { color:#555; }
+
+    /* Edit Form Grid */
+    .mgrid { display:grid; grid-template-columns:1fr 1fr; gap:12px 22px; }
+    @media(max-width:560px){ .mgrid{ grid-template-columns:1fr; } }
+    .mf label { display:block; font-size:11px; color:#999; font-weight:600; margin-bottom:4px; }
+    .mf input, .mf textarea, .mf select {
+        width:100%; padding:7px 10px; border:1px solid #ddd;
+        border-radius:6px; font-size:13px; outline:none; font-family:inherit;
+    }
+    .mf input:focus,.mf textarea:focus { border-color:#FFD101; box-shadow:0 0 0 2px rgba(255,209,1,.18); }
+    .mf.s2 { grid-column: span 2; }
+    @media(max-width:560px){ .mf.s2{ grid-column:span 1; } }
+    .mfoot { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; padding-top:14px; border-top:1px solid #eee; }
+    .btn-cancel { padding:9px 20px; background:#eee; border:none; border-radius:7px; cursor:pointer; font-size:13px; }
+    .btn-cancel:hover { background:#ddd; }
+    .btn-save   { padding:9px 24px; background:#27ae60; color:#fff; border:none; border-radius:7px; cursor:pointer; font-size:13px; font-weight:700; }
+    .btn-save:hover { background:#219a52; }
+
+    /* Detail Fields */
+    .dg  { display:grid; grid-template-columns:1fr 1fr; gap:14px 26px; }
+    .dg3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px 26px; }
+    @media(max-width:620px){ .dg,.dg3{ grid-template-columns:1fr; } }
+    .df  { display:flex; flex-direction:column; gap:3px; }
+    .dlb { font-size:11px; color:#bbb; font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
+    .dv  { font-size:14px; color:#333; font-weight:500; word-break:break-word; }
+    .dv.big   { font-size:22px; font-weight:800; color:#2c3e50; }
+    .dv.green { color:#27ae60; font-weight:700; }
+    .dv.gold  { color:#b8860b; font-weight:700; }
+    .dcard    { background:#f8f9fa; border-radius:10px; padding:16px 20px; margin-bottom:14px; border-left:3px solid #FFD101; }
+    .dcard-t  { font-size:12px; font-weight:700; color:#b8860b; margin:0 0 12px; display:flex; align-items:center; gap:7px; }
+    .map-frame { width:100%; height:290px; border:none; border-radius:10px; }
+    .no-map { background:#f0f0f0; border-radius:10px; height:110px; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:13px; gap:8px; }
+    </style>
+</head>
+<body>
+
+<!-- ===== ปุ่ม toggle sidebar (เหมือน index.html 100%) ===== -->
+<button class="toggle-sidebar" id="toggleSidebar">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- ===== Overlay สำหรับมือถือ ===== -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ===== Sidebar (copy จาก index.html ทุก menu item) ===== -->
+<div class="sidebar" id="sidebar">
+    <div class="admin-header" style="flex-direction:column;align-items:center;">
+        <div class="admin-avatar"><i class="fas fa-user"></i></div>
+        <div class="admin-name" id="sidebarUsername">Admin</div>
+        <div class="admin-email" id="sidebarEmail" style="font-size:11px;color:#bbb;margin-top:2px;word-break:break-all;text-align:center;width:100%;"></div>
+    </div>
+
+    <div class="menu-section-title">Pages</div>
+
+    <div class="menu-item">
+        <a href="index.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">หน้าหลัก</span>
+        </a>
+    </div>
+
+    <!-- Property — active (highlight) -->
+    <div class="menu-item active" style="background:rgba(255,209,1,0.15);border-left:3px solid #FFD101;">
+        <a href="property.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-map-marked-alt" style="width: 20px; text-align: center; color:#c8960e;"></i>
+            <span style="flex: 1; font-weight:700;">Property</span>
+        </a>
+    </div>
+
+    <div class="menu-item">
+        <a href="maeta_t.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">แม่ทา(T)</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="lamphun1.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">ลำพูน1</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="makhueachae.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">มะเขือแจ้</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="umong.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">อุโมงค์</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="nikhom.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">นิคมลำพูน</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="lamphun2.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">ลำพูน2</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="pasak.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">ป่าสัก(ลำพูน)</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="maeta_r.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">แม่ทา(R)</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="thakat.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">ทากาศ</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="sritia.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">ศรีเตี้ย</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="li.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">ลี้</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="muangsampi.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">ม่วงสามปี</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="huaipuchek_r.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">ห้วยปูเจ็ก(R)</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="thunghuachang_t.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">ทุ่งหัวช้าง(T)</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="thunghuachang_r.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">ทุ่งหัวช้าง(R)</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="banpuang.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">บ้านปวง</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="pasang.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">ป่าซาง</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="banruan.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">บ้านเรือน</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="banthi.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">บ้านธิ</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="wiangnonglong.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">เวียงหนองล่อง</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="wangphang.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">วังผาง</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="banhong.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width: 20px; text-align: center;"></i>
+            <span style="flex: 1;">บ้านโฮ่ง</span>
+        </a>
+    </div>
+    <div class="menu-item">
+        <a href="khuntannoi_r.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+            <i class="fas fa-building" style="width :20px ; text-align :center ;"></i>
+            <span style="flex :1 ;">ขุนตาลน้อย(R)</span>
+        </a>
+    </div>
+
+    <div class="logo">
+        <img src="img/logo.png" alt="Logo">
+    </div>
+</div>
+
+<!-- ===== Main Content ===== -->
+<div class="main-content">
+
+    <!-- Top Bar (เหมือน index.html) -->
+    <div class="top-bar">
+        <div class="breadcrumb">Home - Property (ที่ดินและสินทรัพย์)</div>
+        <div style="display:flex;gap:15px;align-items:center;">
+            <button class="logout-btn" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+            </button>
+        </div>
+    </div>
+
+    <div style="margin-bottom:20px;color:#666;">Today <i class="fa-solid fa-caret-down"></i></div>
+
+    <!-- ── Summary Cards ── -->
+    <div class="prop-stats">
+        <div class="stat-card yellow" onclick="filterStatus('all')" style="cursor:pointer;">
+            <div class="stat-icon"><i class="fas fa-map"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">ทั้งหมด</div>
+                <div class="stat-value" id="ps-total">0</div>
+            </div>
+        </div>
+        <div class="stat-card blue" onclick="filterStatus('ใช้งานเต็มพื้นที่')" style="cursor:pointer;">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">ใช้งานเต็มพื้นที่</div>
+                <div class="stat-value" id="ps-inuse">0</div>
+            </div>
+        </div>
+        <div class="stat-card yellow" onclick="filterStatus('ว่างหาประโยชน์')" style="cursor:pointer;">
+            <div class="stat-icon"><i class="fas fa-search-dollar"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">ว่างหาประโยชน์</div>
+                <div class="stat-value" id="ps-vacant">0</div>
+            </div>
+        </div>
+        <div class="stat-card blue" onclick="filterStatus('ให้เช่า')" style="cursor:pointer;">
+            <div class="stat-icon"><i class="fas fa-key"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">ให้เช่า</div>
+                <div class="stat-value" id="ps-rent">0</div>
+            </div>
+        </div>
+        <div class="stat-card yellow" style="cursor:default;">
+            <div class="stat-icon"><i class="fas fa-coins"></i></div>
+            <div class="stat-content">
+                <div class="stat-label">รายได้ค่าเช่ารวม/เดือน (บ.)</div>
+                <div class="stat-value" id="ps-income" style="font-size:22px;">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Table Section ── -->
+    <div class="table-container">
+
+        <!-- Import Zone (แสดงเมื่อยังไม่มีข้อมูล) -->
+        <div class="import-zone" id="importZone">
+            <i class="fas fa-file-excel" style="font-size:44px;color:#27ae60;display:block;margin-bottom:14px;"></i>
+            <div style="font-size:16px;font-weight:600;color:#444;margin-bottom:6px;">คลิกหรือลากไฟล์ Excel มาวางที่นี่</div>
+            <div style="font-size:13px;color:#aaa;">รองรับ .xlsx, .xls — โครงสร้างไฟล์ NT_GMap</div>
+        </div>
+        <input type="file" id="xlInput" accept=".xlsx,.xls" style="display:none;">
+
+        <!-- Toolbar -->
+        <div class="table-header">
+            <div class="search-wrapper">
+                <select class="search-type" id="pSType">
+                    <option value="all">ทั้งหมด</option>
+                    <option value="name">ชื่อที่ตั้ง</option>
+                    <option value="amphoe">อำเภอ/จังหวัด</option>
+                    <option value="landType">ประเภทที่ดิน</option>
+                    <option value="docRight">เอกสารสิทธิ์</option>
+                    <option value="status">สถานะ</option>
+                </select>
+                <input type="text" class="search-box" id="pSInput" placeholder="ค้นหา...">
+                <button class="search-btn" id="pSBtn"><i class="fas fa-search"></i></button>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <span id="pRowInfo" style="font-size:12px;color:#888;white-space:nowrap;"></span>
+                <button class="add-btn" onclick="document.getElementById('xlInput').click()"
+                        style="background:#27ae60;display:flex;align-items:center;gap:6px;">
+                    <i class="fas fa-file-excel"></i> Import Excel
+                </button>
+                <button id="propUploadBtn" class="add-btn"
+                        onclick="uploadPropertyToDB()"
+                        style="background:#2980b9;display:none;align-items:center;gap:6px;">
+                    <i class="fas fa-upload"></i> Upload ลง DB
+                </button>
+                <button class="add-btn admin-only" id="btnAdd" onclick="openEditModal(null)">
+                    <i class="fas fa-plus"></i> เพิ่มรายการ
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Pills -->
+        <div class="pill-bar" id="pillBar">
+            <span class="fpill active" data-s="all"              onclick="filterStatus('all')">ทั้งหมด</span>
+            <span class="fpill"        data-s="ใช้งานเต็มพื้นที่" onclick="filterStatus('ใช้งานเต็มพื้นที่')">ใช้งานเต็มพื้นที่</span>
+            <span class="fpill"        data-s="ว่างหาประโยชน์"   onclick="filterStatus('ว่างหาประโยชน์')">ว่างหาประโยชน์</span>
+            <span class="fpill"        data-s="ให้เช่า"           onclick="filterStatus('ให้เช่า')">ให้เช่า</span>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:42px;">ลำดับ</th>
+                        <th>ชื่อที่ตั้ง / ที่อยู่</th>
+                        <th>อำเภอ/เขต</th>
+                        <th>จังหวัด</th>
+                        <th>หน่วยงาน</th>
+                        <th>ประเภทที่ดิน</th>
+                        <th>เนื้อที่ (ไร่-งาน-วา)</th>
+                        <th>เอกสารสิทธิ์</th>
+                        <th style="text-align:center;">สิ่งปลูกสร้าง</th>
+                        <th style="text-align:center;">โฉนด/ผัง</th>
+                        <th>ทำเล</th>
+                        <th>ข้อเสนอแนะ</th>
+                        <th>หมายเหตุ</th>
+                        <th style="text-align:right;">ค่าเช่า/เดือน</th>
+                        <th style="text-align:right;">ราคาประเมิน/ตร.ว.</th>
+                        <th>ภาษีที่ดิน</th>
+                        <th>ปีภาษี</th>
+                        <th>สถานะ</th>
+                        <th id="thManage">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="propTbody">
+                    <tr>
+                        <td colspan="19" style="text-align:center;padding:50px;color:#bbb;font-size:14px;">
+                            <i class="fas fa-file-excel" style="margin-right:6px;color:#aaa;"></i>
+                            กด <strong>Import Excel</strong> เพื่อโหลดข้อมูล Property
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <span id="pPageInfo" style="font-size:13px;color:#888;margin-right:auto;"></span>
+            <div id="pPager" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODAL: เพิ่ม / แก้ไข (Admin เท่านั้น)
+══════════════════════════════════════════ -->
+<div class="modal-ovl" id="editModal">
+    <div class="modal-box wide">
+        <div class="mhead">
+            <h3 id="editTitle"><i class="fas fa-edit"></i> แก้ไขข้อมูล</h3>
+            <span class="mclose" onclick="closeEditModal()">&times;</span>
+        </div>
+        <div class="mgrid">
+            <div class="mf s2">
+                <label>ชื่อที่ตั้ง / ที่อยู่ <span style="color:#e74c3c;">*</span></label>
+                <input type="text" id="ef-name">
+            </div>
+            <div class="mf"><label>อำเภอ/เขต</label><input type="text" id="ef-amphoe"></div>
+            <div class="mf"><label>จังหวัด</label><input type="text" id="ef-changwat"></div>
+            <div class="mf"><label>รหัสสถานี</label><input type="text" id="ef-station_code"></div>
+            <div class="mf s2"><label>ประเภทที่ดิน</label><input type="text" id="ef-landType"></div>
+            <div class="mf"><label>เนื้อที่รวม (ไร่-งาน-วา)</label><input type="text" id="ef-area"></div>
+            <div class="mf"><label>เอกสารสิทธิ์ / ทะเบียนเลขที่</label><input type="text" id="ef-docRight"></div>
+            <div class="mf"><label>แสดงสิ่งปลูกสร้าง (จำนวนรายการ)</label><input type="text" id="ef-items"></div>
+            <div class="mf"><label>โฉนดและผังบริเวณที่ดิน (จำนวนรูป)</label><input type="text" id="ef-chanod"></div>
+            <div class="mf"><label>ค่าเช่า/เดือน (บาท)</label><input type="number" id="ef-rent" min="0" value="0"></div>
+            <div class="mf"><label>ราคาประเมิน (บ./ตร.ว.)</label><input type="number" id="ef-appraise" min="0" value="0"></div>
+            <div class="mf"><label>หน่วยงาน (ผู้ให้เช่า)</label><input type="text" id="ef-owner_dept"></div>
+            <div class="mf"><label>ภาษีที่ดินและสิ่งปลูกสร้าง</label><input type="text" id="ef-tax"></div>
+            <div class="mf"><label>ปี พ.ศ. ที่ชำระภาษี</label><input type="text" id="ef-tax_year"></div>
+            <div class="mf"><label>LATITUDE</label><input type="text" id="ef-lat"></div>
+            <div class="mf"><label>LONGITUDE</label><input type="text" id="ef-lon"></div>
+            <div class="mf">
+                <label>สถานะ</label>
+                <select id="ef-status">
+                    <option value="ใช้งานเต็มพื้นที่">ใช้งานเต็มพื้นที่</option>
+                    <option value="ว่างหาประโยชน์">ว่างหาประโยชน์</option>
+                    <option value="ให้เช่า">ให้เช่า</option>
+                </select>
+            </div>
+            <div class="mf s2"><label>ทำเล</label><input type="text" id="ef-tamlae"></div>
+            <div class="mf s2"><label>ข้อเสนอแนะการหารายได้</label><textarea id="ef-suggestion" rows="2"></textarea></div>
+            <div class="mf s2"><label>หมายเหตุ</label><textarea id="ef-note" rows="2"></textarea></div>
+        </div>
+        <div class="mfoot">
+            <button class="btn-cancel" onclick="closeEditModal()">ยกเลิก</button>
+            <button class="btn-save"   onclick="saveItem()"><i class="fas fa-save"></i> บันทึก</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODAL: รายละเอียด (คลิกแถว)
+══════════════════════════════════════════ -->
+<div class="modal-ovl" id="detailModal">
+    <div class="modal-box xwide">
+        <div class="mhead">
+            <h3 id="detailName" style="font-size:15px;font-weight:700;"></h3>
+            <span class="mclose" onclick="closeDetailModal()">&times;</span>
+        </div>
+        <div id="detailBody"></div>
+        <div class="mfoot">
+            <button class="btn-cancel" onclick="closeDetailModal()">ปิด</button>
+            <button class="btn-save admin-only" id="btnEditFromDetail" onclick="editFromDetail()"
+                    style="background:#f39c12;">
+                <i class="fas fa-edit"></i> แก้ไข
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Image Popup Modal -->
+<div id="imgModal">
+    <div id="imgModalBox">
+        <div id="imgModalTitle">
+            <span id="imgModalLabel">📷 รูปภาพ</span>
+            <span style="cursor:pointer;font-size:22px;color:#bbb;" onclick="closeImgModal()">×</span>
+        </div>
+        <div class="img-grid" id="imgGrid"></div>
+        <div class="img-hint">คลิกที่รูปเพื่อขยายเต็มจอ</div>
+    </div>
+</div>
+<!-- Fullscreen viewer -->
+<div id="imgFullscreen" onclick="document.getElementById('imgFullscreen').classList.remove('open')">
+    <img id="imgFullImg" src="" alt="">
+</div>
+
+<!-- script.js (auth + sidebar toggle + logout — เหมือน index.html ทุกอย่าง) -->
+<script src="script.js"></script>
+
+<script>
+// ════════════════════════════════════════════════
+//  PROPERTY MODULE — DB Edition
+// ════════════════════════════════════════════════
+
+var DATA          = [];     // ข้อมูลจาก DB
+var FILTERED      = [];     // หลังกรอง
+var IMPORT_BUFFER = [];     // parsed Excel รอ upload
+var CUR_PAGE      = 1;
+var PER_PAGE      = 20;
+var CUR_STATUS    = 'all';
+var IS_ADMIN      = false;
+var EDIT_ID       = null;
+var DETAIL_ID     = null;
+
+/* ══════════════════════════════════════════════
+   สิทธิ์ User / Admin
+══════════════════════════════════════════════ */
+function applyRole () {
+    try {
+        var u = JSON.parse(localStorage.getItem('userData') || '{}');
+        var r = (u.role || u.user_type || u.user_level || u.level || '').toString().toLowerCase();
+        IS_ADMIN = (r === 'admin' || r === '1' || r === 'administrator'
+                    || u.is_admin === true || u.is_admin === 1);
+    } catch (e) { IS_ADMIN = false; }
+    document.querySelectorAll('.admin-only').forEach(function (el) {
+        el.style.display = IS_ADMIN ? '' : 'none';
+    });
+}
+
+/* ══════════════════════════════════════════════
+   โหลดข้อมูลจาก DB
+══════════════════════════════════════════════ */
+async function loadFromDB () {
+    try {
+        var res    = await fetch('api_properties.php');
+        var result = await res.json();
+        if (!result.success) throw new Error(result.message);
+
+        DATA     = result.data.map(function (r, i) {
+            return {
+                id:           r.id,
+                seq:          r.seq          || (i + 1),
+                name:         r.name         || '',
+                amphoe:       r.amphoe        || '',
+                changwat:     r.changwat      || '',
+                landType:     r.land_type     || '',
+                area:         r.area          || '',
+                docRight:     r.doc_right     || '',
+                rent:         parseFloat(r.rent)     || 0,
+                appraise:     parseFloat(r.appraise) || 0,
+                lat:          parseFloat(r.lat)       || 0,
+                lon:          parseFloat(r.lon)       || 0,
+                status:       r.status        || '',
+                tax:          r.tax           || '',
+                tamlae:       r.tamlae        || '',
+                items:        r.items         || '',
+                note:         r.note          || '',
+                suggestion:   r.suggestion    || '',
+                station_code: r.station_code  || '',
+                chanod:       r.chanod         || '',
+                owner_dept:   r.owner_dept     || '',
+                tax_year:     r.tax_year       || '',
+                images_items:  Array.isArray(r.images_items)  ? r.images_items  : [],
+                images_chanod: Array.isArray(r.images_chanod) ? r.images_chanod : []
+            };
+        });
+        FILTERED   = DATA.slice();
+        CUR_STATUS = 'all';
+        CUR_PAGE   = 1;
+        setPills('all');
+
+        // ซ่อน importZone ถ้ามีข้อมูลใน DB แล้ว
+        if (DATA.length > 0) {
+            document.getElementById('importZone').classList.add('hidden');
+        }
+        updateSummary();
+        renderTable();
+
+    } catch (err) {
+        console.error('loadFromDB error:', err);
+    }
+}
+
+/* ══════════════════════════════════════════════
+   อัปโหลด IMPORT_BUFFER ลง DB ทีละแถว
+   (pattern เดียวกับ uploadToDatabase ใน script.js)
+══════════════════════════════════════════════ */
+async function uploadPropertyToDB () {
+    if (!IMPORT_BUFFER.length) {
+        alert('❌ ไม่มีข้อมูล กรุณา Import Excel ก่อน');
+        return;
+    }
+
+    // Loading overlay
+    var overlay = document.createElement('div');
+    overlay.id  = 'propUploadOverlay';
+    overlay.innerHTML = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;'
+        + 'background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10000;">'
+        + '<div style="background:#fff;padding:30px;border-radius:10px;text-align:center;min-width:320px;">'
+        + '<div style="font-size:18px;margin-bottom:15px;">📤 กำลังอัปโหลด Property...</div>'
+        + '<div style="font-size:14px;color:#666;"><span id="propUpProg">0</span> / ' + IMPORT_BUFFER.length + ' รายการ</div>'
+        + '<div style="margin-top:12px;width:280px;height:16px;background:#f0f0f0;border-radius:8px;overflow:hidden;margin:12px auto 0;">'
+        + '<div id="propUpBar" style="width:0%;height:100%;background:#FFD101;transition:width .3s;"></div>'
+        + '</div></div></div>';
+    document.body.appendChild(overlay);
+
+    var progEl = document.getElementById('propUpProg');
+    var barEl  = document.getElementById('propUpBar');
+    var ok = 0, fail = 0;
+
+    for (var i = 0; i < IMPORT_BUFFER.length; i++) {
+        var p = IMPORT_BUFFER[i];
+        try {
+            var res = await fetch('api_properties.php', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(p)
+            });
+            var result = await res.json();
+            result.success ? ok++ : fail++;
+        } catch (e) {
+            fail++;
+        }
+        progEl.textContent = ok;
+        barEl.style.width  = Math.round(((ok + fail) / IMPORT_BUFFER.length) * 100) + '%';
+    }
+
+    document.getElementById('propUploadOverlay').remove();
+    IMPORT_BUFFER = [];
+    document.getElementById('propUploadBtn').style.display = 'none';
+
+    if (fail > 0) {
+        alert('✅ อัปโหลดเสร็จ! สำเร็จ ' + ok + ' / ผิดพลาด ' + fail + ' รายการ');
+    } else {
+        alert('✅ อัปโหลดสำเร็จทั้งหมด ' + ok + ' รายการ');
+    }
+    loadFromDB();
+}
+
+/* ══════════════════════════════════════════════
+   Import Excel → parse → แสดงในตาราง (preview)
+   กด "Upload ลง DB" ค่อยส่ง API
+══════════════════════════════════════════════ */
+function handleExcelFile (file) {
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+        try {
+            var wb   = XLSX.read(ev.target.result, { type: 'array' });
+            var ws   = wb.Sheets[wb.SheetNames[0]];
+            var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+            var parsed = parseExcel(rows);
+            if (!parsed.length) {
+                alert('⚠️ ไม่พบข้อมูลในไฟล์ กรุณาตรวจสอบรูปแบบ');
+                return;
+            }
+            IMPORT_BUFFER = parsed;
+            DATA     = parsed.map(function (p, i) {
+                return Object.assign({ id: null }, p);
+            });
+            FILTERED = DATA.slice();
+            CUR_STATUS = 'all';
+            CUR_PAGE   = 1;
+            setPills('all');
+            document.getElementById('importZone').classList.add('hidden');
+            // แสดงปุ่ม Upload
+            document.getElementById('propUploadBtn').style.display = 'inline-flex';
+            updateSummary();
+            renderTable();
+            alert('✅ Import สำเร็จ พบ ' + DATA.length + ' รายการ\nกรุณากด "Upload ลง DB" เพื่อบันทึก');
+        } catch (err) {
+            alert('❌ เกิดข้อผิดพลาด: ' + err.message);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+document.getElementById('xlInput').addEventListener('change', function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    handleExcelFile(file);
+    e.target.value = '';
+});
+
+document.getElementById('importZone').onclick = function () {
+    document.getElementById('xlInput').click();
+};
+
+// Drag & Drop
+(function () {
+    var zone = document.getElementById('importZone');
+    zone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        zone.style.borderColor = '#FFD101';
+        zone.style.background  = '#fffef0';
+    });
+    zone.addEventListener('dragleave', function () {
+        zone.style.borderColor = '#c8d0da';
+        zone.style.background  = '';
+    });
+    zone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        zone.style.borderColor = '#c8d0da';
+        zone.style.background  = '';
+        var file = e.dataTransfer.files[0];
+        if (!file) return;
+        if (!/\.(xlsx|xls)$/i.test(file.name)) {
+            alert('⚠️ กรุณาเลือกไฟล์ .xlsx หรือ .xls เท่านั้น');
+            return;
+        }
+        handleExcelFile(file);
+    });
+})();
+
+/* ══════════════════════════════════════════════
+   Parse Excel — รองรับ 2 format อัตโนมัติ
+   FORMAT A : NT_GMap (col[0] เป็นตัวเลขลบ)
+   FORMAT B : Excel แถวปกติ (row 0 = header)
+══════════════════════════════════════════════ */
+function parseExcel (rows) {
+    if (!rows || rows.length < 2) return [];
+    var isNT = rows.slice(0, 15).some(function (r) {
+        return r[0] !== '' && r[0] !== null && typeof r[0] === 'number' && r[0] < 0;
+    });
+    return isNT ? parseNTGMap(rows) : parseGeneric(rows);
+}
+
+function parseNTGMap (rows) {
+    var props = [], i = 0;
+    while (i < rows.length && !(rows[i][0] !== '' && rows[i][0] !== null &&
+           typeof rows[i][0] === 'number' && rows[i][0] < 0)) { i++; }
+
+    while (i < rows.length) {
+        var r0 = rows[i];
+        if (r0[0] !== '' && r0[0] !== null && typeof r0[0] === 'number' && r0[0] < 0) {
+            var block = [], j = i;
+            while (j < rows.length) {
+                if (j > i && rows[j][0] !== '' && rows[j][0] !== null &&
+                    typeof rows[j][0] === 'number' && rows[j][0] < 0) break;
+                block.push(rows[j]);
+                j++;
+            }
+            var r1 = block[0] || [], r2 = block[1] || [];
+            var status = '', note = '', suggestion = '', amphoe = '', changwat = '', tax = '', owner_dept = '', tax_year = '';
+
+            block.forEach(function (b) {
+                var s1  = b[1]  ? String(b[1]).replace(/\u00a0/g, ' ').trim() : '';
+                var s4  = b[4]  ? String(b[4]).replace(/\u00a0/g, ' ').trim() : '';
+                var s11 = b[11] ? String(b[11]).trim() : '';
+                var s2  = b[2]  ? String(b[2]).replace(/\u00a0/g, ' ').trim() : '';
+                if (s1.indexOf('สถานะ') !== -1 && !status)
+                    status = s1.replace(/สถานะ\s*:?\s*/g, '').trim();
+                if (s4.indexOf('หมายเหตุ') !== -1 && !note)
+                    note = s4.replace(/หมายเหตุ\s*:?\s*/g, '').trim();
+                if (s4.indexOf('ข้อเสนอแนะ') !== -1 && !suggestion)
+                    suggestion = s4.replace(/ข้อเสนอแนะ[^\:]*:?\s*/g, '').trim();
+                if ((s1.indexOf('อำเภอ') !== -1 || s1.indexOf('เขต') !== -1) && !amphoe)
+                    amphoe = s1.replace(/อำเภอ\/เขต\s*/g, '').replace(/อำเภอ\s*/g, '').trim();
+                if (s1.indexOf('จ.') === 0 && !changwat)
+                    changwat = s1;
+                if (s11 && s11 !== 'None' && s11 !== 'null' && !tax)
+                    tax = s11;
+                if (s2 && s2 !== 'None' && s2 !== 'null' && !owner_dept)
+                    owner_dept = s2;
+                var s3 = b[3] ? String(b[3]).trim() : '';
+                if (s3 && /^\d{4}$/.test(s3) && !tax_year)
+                    tax_year = s3;
+            });
+
+            props.push({
+                seq:          Math.abs(parseInt(r1[0])) || (props.length + 1),
+                name:         String(r1[1] || '').trim(),
+                amphoe:       amphoe,
+                changwat:     changwat,
+                owner_dept:   owner_dept,
+                items:        String(r2[2] || '').trim(),
+                tamlae:       String(r1[4] || '').replace(/ทำเล\s*:?\s*/g, '').trim(),
+                suggestion:   suggestion,
+                note:         note,
+                rent:         typeof r1[5] === 'number' ? r1[5] : (parseFloat(r1[5]) || 0),
+                lat:          typeof r1[6] === 'number' ? r1[6] : (parseFloat(r1[6]) || 0),
+                lon:          typeof r2[6] === 'number' ? r2[6] : (parseFloat(r2[6]) || 0),
+                area:         String(r1[7] || '').trim(),
+                landType:     String(r1[8] || '').trim(),
+                docRight:     String(r1[9] || '').trim(),
+                tax:          tax,
+                tax_year:     tax_year,
+                appraise:     typeof r1[12] === 'number' ? r1[12] : (parseFloat(r1[12]) || 0),
+                status:       status,
+                station_code: '',
+                chanod:       String(r2[3] || '').trim()
+            });
+            i = j;
+        } else { i++; }
+    }
+    return props;
+}
+
+function parseGeneric (rows) {
+    var props = [], hIdx = 0;
+    for (var k = 0; k < Math.min(rows.length, 5); k++) {
+        if (rows[k].filter(function (c) { return c !== '' && c !== null; }).length >= 3) {
+            hIdx = k; break;
+        }
+    }
+    var headers = rows[hIdx].map(function (h) { return String(h || '').toLowerCase().trim(); });
+    function col (kws) {
+        for (var i = 0; i < headers.length; i++)
+            for (var k = 0; k < kws.length; k++)
+                if (headers[i].indexOf(kws[k]) !== -1) return i;
+        return -1;
+    }
+    var CI = {
+        name:         col(['ชื่อที่ตั้ง','ที่ตั้ง','name','ที่อยู่']),
+        amphoe:       col(['อำเภอ','เขต','amphoe','district']),
+        changwat:     col(['จังหวัด','changwat','province']),
+        owner_dept:   col(['หน่วยงาน','owner','dept']),
+        landType:     col(['ประเภทที่ดิน','landtype','ประเภท']),
+        area:         col(['เนื้อที่','area','ขนาด']),
+        docRight:     col(['เอกสาร','เลขที่','docright','title']),
+        items:        col(['แสดง','สิ่งปลูกสร้าง','items']),
+        chanod:       col(['โฉนด/ผัง','โฉนด','chanod']),
+        tamlae:       col(['ทำเล','tamlae']),
+        suggestion:   col(['ข้อเสนอ','suggestion']),
+        note:         col(['หมายเหตุ','note','remark']),
+        rent:         col(['ค่าเช่า','rent']),
+        appraise:     col(['ราคาประเมิน','appraise','ประเมิน']),
+        tax:          col(['ภาษีที่ดิน','ภาษี','tax']),
+        tax_year:     col(['ปีภาษี','tax_year','ปี พ.ศ.']),
+        lat:          col(['lat','latitude','ละติจูด']),
+        lon:          col(['lon','long','longitude','ลองจิจูด']),
+        status:       col(['สถานะ','status']),
+        station_code: col(['รหัสสถานี','station'])
+    };
+    function cv (row, idx) { return idx >= 0 ? String(row[idx] || '').trim() : ''; }
+    function cn (row, idx) { if (idx < 0) return 0; var v = row[idx]; return typeof v === 'number' ? v : (parseFloat(v) || 0); }
+
+    for (var i = hIdx + 1; i < rows.length; i++) {
+        var row = rows[i];
+        if (row.filter(function (c) { return c !== '' && c !== null; }).length < 2) continue;
+        var name = cv(row, CI.name) || cv(row, 0) || cv(row, 1);
+        if (!name) continue;
+        props.push({
+            seq:          props.length + 1,
+            name:         name,
+            amphoe:       cv(row, CI.amphoe),
+            changwat:     cv(row, CI.changwat),
+            owner_dept:   cv(row, CI.owner_dept),
+            landType:     cv(row, CI.landType),
+            area:         cv(row, CI.area),
+            docRight:     cv(row, CI.docRight),
+            items:        cv(row, CI.items),
+            chanod:       cv(row, CI.chanod),
+            tamlae:       cv(row, CI.tamlae),
+            suggestion:   cv(row, CI.suggestion),
+            note:         cv(row, CI.note),
+            rent:         cn(row, CI.rent),
+            appraise:     cn(row, CI.appraise),
+            tax:          cv(row, CI.tax),
+            tax_year:     cv(row, CI.tax_year),
+            lat:          cn(row, CI.lat),
+            lon:          cn(row, CI.lon),
+            status:       cv(row, CI.status) || 'ใช้งานเต็มพื้นที่',
+            station_code: cv(row, CI.station_code)
+        });
+    }
+    return props;
+}
+
+/* ══════════════════════════════════════════════
+   Summary Cards
+══════════════════════════════════════════════ */
+function updateSummary () {
+    var total  = DATA.length;
+    var inuse  = DATA.filter(function (p) { return p.status.indexOf('ใช้งาน') !== -1; }).length;
+    var vacant = DATA.filter(function (p) { return p.status.indexOf('ว่าง')   !== -1; }).length;
+    var rent   = DATA.filter(function (p) { return p.status.indexOf('เช่า')   !== -1; }).length;
+    var income = DATA.reduce(function (s, p) { return s + (p.rent || 0); }, 0);
+    document.getElementById('ps-total').textContent  = total;
+    document.getElementById('ps-inuse').textContent  = inuse;
+    document.getElementById('ps-vacant').textContent = vacant;
+    document.getElementById('ps-rent').textContent   = rent;
+    document.getElementById('ps-income').textContent = income.toLocaleString();
+}
+
+/* ══════════════════════════════════════════════
+   Badge & escape
+══════════════════════════════════════════════ */
+function badge (s) {
+    if (!s) return '<span class="sbadge sb-other">-</span>';
+    var cls = 'sb-other';
+    if (s.indexOf('ใช้งาน') !== -1) cls = 'sb-inuse';
+    else if (s.indexOf('ว่าง') !== -1) cls = 'sb-vacant';
+    else if (s.indexOf('เช่า') !== -1) cls = 'sb-rent';
+    return '<span class="sbadge ' + cls + '">' + h(s) + '</span>';
+}
+function h (s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                          .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══════════════════════════════════════════════
+   Render Table
+══════════════════════════════════════════════ */
+function renderTable () {
+    var tbody = document.getElementById('propTbody');
+    var start = (CUR_PAGE - 1) * PER_PAGE;
+    var slice = FILTERED.slice(start, start + PER_PAGE);
+    var total = FILTERED.length;
+
+    document.getElementById('pRowInfo').textContent =
+        total > 0 ? 'แสดง ' + (start + 1) + '–' + Math.min(start + slice.length, total) + ' จาก ' + total + ' รายการ' : '';
+
+    if (!slice.length) {
+        tbody.innerHTML = '<tr><td colspan="19" style="text-align:center;padding:40px;color:#bbb;">ไม่พบข้อมูล</td></tr>';
+        renderPager(total); return;
+    }
+
+    tbody.innerHTML = slice.map(function (p, idx) {
+        var no = start + idx + 1;
+        var itemsBtn = p.images_items && p.images_items.length
+            ? '<button class="btn-img" onclick="event.stopPropagation();openImgModal(' + p.id + ',\'items\')"><i class="fas fa-images"></i> ' + p.images_items.length + ' รูป</button>'
+            : (p.items ? '<span style="font-size:11px;color:#888;">' + h(p.items) + '</span>' : '<span style="color:#ccc;">-</span>');
+        var chanodBtn = p.images_chanod && p.images_chanod.length
+            ? '<button class="btn-img" onclick="event.stopPropagation();openImgModal(' + p.id + ',\'chanod\')"><i class="fas fa-file-image"></i> ' + p.images_chanod.length + ' รูป</button>'
+            : (p.chanod ? '<span style="font-size:11px;color:#888;">' + h(p.chanod) + '</span>' : '<span style="color:#ccc;">-</span>');
+        var adminCol = IS_ADMIN
+            ? '<td onclick="event.stopPropagation()" style="white-space:nowrap;">'
+              + '<button class="btn-ed" onclick="openEditModal(' + p.id + ')"><i class="fas fa-edit"></i></button>'
+              + '<button class="btn-dl" onclick="deleteItem(' + p.id + ')"><i class="fas fa-trash"></i></button>'
+              + '</td>'
+            : '';
+        return '<tr onclick="openDetail(' + p.id + ')" title="คลิกดูรายละเอียด">'
+            + '<td style="text-align:center;font-weight:700;">' + no + '</td>'
+            + '<td title="' + h(p.name) + '">' + h(p.name || '-') + '</td>'
+            + '<td>' + h(p.amphoe   || '-') + '</td>'
+            + '<td>' + h(p.changwat || '-') + '</td>'
+            + '<td title="' + h(p.owner_dept) + '">' + h(p.owner_dept || '-') + '</td>'
+            + '<td title="' + h(p.landType) + '">' + h(p.landType || '-') + '</td>'
+            + '<td>' + h(p.area     || '-') + '</td>'
+            + '<td>' + h(p.docRight || '-') + '</td>'
+            + '<td style="text-align:center;">' + itemsBtn + '</td>'
+            + '<td style="text-align:center;">' + chanodBtn + '</td>'
+            + '<td title="' + h(p.tamlae) + '">' + h(p.tamlae || '-') + '</td>'
+            + '<td title="' + h(p.suggestion) + '">' + h(p.suggestion || '-') + '</td>'
+            + '<td title="' + h(p.note) + '">' + h(p.note || '-') + '</td>'
+            + '<td style="text-align:right;">' + (p.rent     > 0 ? p.rent.toLocaleString()     : '-') + '</td>'
+            + '<td style="text-align:right;">' + (p.appraise > 0 ? p.appraise.toLocaleString() : '-') + '</td>'
+            + '<td>' + h(p.tax      || '-') + '</td>'
+            + '<td>' + h(p.tax_year || '-') + '</td>'
+            + '<td>' + badge(p.status) + '</td>'
+            + adminCol
+            + '</tr>';
+    }).join('');
+
+    renderPager(total);
+}
+
+/* ══════════════════════════════════════════════
+   Pagination
+══════════════════════════════════════════════ */
+function renderPager (total) {
+    var pages = Math.ceil(total / PER_PAGE);
+    document.getElementById('pPageInfo').textContent =
+        pages > 0 ? 'หน้า ' + CUR_PAGE + ' / ' + pages : '';
+    var pg = document.getElementById('pPager');
+    if (pages <= 1) { pg.innerHTML = ''; return; }
+    var s = pgBtn('‹', CUR_PAGE > 1 ? 'gp(' + (CUR_PAGE - 1) + ')' : '', CUR_PAGE <= 1);
+    for (var i = 1; i <= pages; i++) {
+        if (i === CUR_PAGE)
+            s += '<button style="padding:5px 11px;border:1px solid #FFD101;background:#FFD101;border-radius:4px;font-weight:700;cursor:default;">' + i + '</button>';
+        else if (i <= 2 || i >= pages - 1 || Math.abs(i - CUR_PAGE) <= 1)
+            s += pgBtn(i, 'gp(' + i + ')', false);
+        else if (Math.abs(i - CUR_PAGE) === 2)
+            s += '<span style="padding:5px 3px;">…</span>';
+    }
+    s += pgBtn('›', CUR_PAGE < pages ? 'gp(' + (CUR_PAGE + 1) + ')' : '', CUR_PAGE >= pages);
+    pg.innerHTML = s;
+}
+function pgBtn (lbl, fn, dis) {
+    return '<button ' + (dis ? 'disabled' : '') + ' onclick="' + fn + '"'
+         + ' style="padding:5px 11px;border:1px solid #ddd;border-radius:4px;cursor:' + (dis ? 'default' : 'pointer') + ';">'
+         + lbl + '</button>';
+}
+function gp (p) {
+    if (p < 1 || p > Math.ceil(FILTERED.length / PER_PAGE)) return;
+    CUR_PAGE = p; renderTable();
+}
+
+/* ══════════════════════════════════════════════
+   Search & Filter
+══════════════════════════════════════════════ */
+function doSearch () {
+    var q    = document.getElementById('pSInput').value.trim().toLowerCase();
+    var type = document.getElementById('pSType').value;
+    FILTERED = DATA.filter(function (p) {
+        var ms = CUR_STATUS === 'all' || p.status === CUR_STATUS;
+        if (!ms) return false;
+        if (!q) return true;
+        switch (type) {
+            case 'name':     return p.name.toLowerCase().indexOf(q) !== -1;
+            case 'amphoe':   return (p.amphoe + ' ' + p.changwat).toLowerCase().indexOf(q) !== -1;
+            case 'landType': return p.landType.toLowerCase().indexOf(q) !== -1;
+            case 'docRight': return p.docRight.toLowerCase().indexOf(q) !== -1;
+            case 'status':   return p.status.toLowerCase().indexOf(q) !== -1;
+            default:
+                return [p.name, p.amphoe, p.changwat, p.landType, p.docRight, p.status, p.note]
+                    .some(function (v) { return v && v.toLowerCase().indexOf(q) !== -1; });
+        }
+    });
+    CUR_PAGE = 1; renderTable();
+}
+function filterStatus (s) { CUR_STATUS = s; setPills(s); doSearch(); }
+function setPills (s) {
+    document.querySelectorAll('#pillBar .fpill').forEach(function (el) {
+        el.classList.toggle('active', el.dataset.s === s);
+    });
+}
+document.getElementById('pSBtn').addEventListener('click', doSearch);
+document.getElementById('pSInput').addEventListener('keyup', function (e) { if (e.key === 'Enter') doSearch(); });
+
+/* ══════════════════════════════════════════════
+   Detail Modal (คลิกแถว)
+══════════════════════════════════════════════ */
+function openDetail (id) {
+    var p = DATA.find(function (x) { return x.id === id; });
+    if (!p) return;
+    DETAIL_ID = id;
+    document.getElementById('detailName').innerHTML =
+        '<i class="fas fa-map-pin" style="color:#FFD101;margin-right:8px;"></i>' + h(p.name);
+    var mapSrc = (p.lat && p.lon)
+        ? 'https://maps.google.com/maps?q=' + p.lat + ',' + p.lon + '&z=16&output=embed' : null;
+    document.getElementById('detailBody').innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:16px;">'
+        + '<div style="font-size:13px;color:#888;"><i class="fas fa-map-marker-alt" style="color:#FFD101;margin-right:4px;"></i>'
+        + h((p.amphoe || '') + ' ' + (p.changwat || ''))
+        + '<span style="margin-left:8px;font-size:11px;color:#bbb;">ลำดับที่ ' + p.seq + '</span></div>'
+        + badge(p.status) + '</div>'
+        + '<div class="dcard"><p class="dcard-t"><i class="fas fa-map"></i> ข้อมูลที่ดิน</p>'
+        + '<div class="dg3">'
+        + dRow('หน่วยงาน', p.owner_dept)
+        + dRow('รหัสสถานี', p.station_code)
+        + dRow('ประเภทที่ดิน', p.landType)
+        + dRow('เนื้อที่รวม', '<span class="dv big">' + h(p.area || '-') + '</span>', true)
+        + dRow('เอกสารสิทธิ์', p.docRight)
+        + dRow('ราคาประเมิน (บ./ตร.ว.)', p.appraise > 0 ? '<span class="dv gold">' + p.appraise.toLocaleString() + ' บ.</span>' : '-', true)
+        + dRow('ภาษีที่ดิน', p.tax)
+        + dRow('ปีภาษี (พ.ศ.)', p.tax_year)
+        + dRow('สิ่งปลูกสร้าง', p.items)
+        + '</div></div>'
+        + '<div class="dcard"><p class="dcard-t"><i class="fas fa-coins"></i> ค่าเช่าและทำเล</p>'
+        + '<div class="dg">'
+        + dRow('ค่าเช่า/เดือน', p.rent > 0 ? '<span class="dv big" style="color:#27ae60;">' + p.rent.toLocaleString() + ' บาท</span>' : '<span style="color:#bbb;">ไม่มีค่าเช่า</span>', true)
+        + dRow('ทำเล', p.tamlae)
+        + '<div class="df" style="grid-column:span 2;"><span class="dlb">ข้อเสนอแนะ</span><div class="dv">' + h(p.suggestion || '-') + '</div></div>'
+        + '<div class="df" style="grid-column:span 2;"><span class="dlb">หมายเหตุ</span><div class="dv">' + h(p.note || '-') + '</div></div>'
+        + '</div></div>'
+        + '<div class="dcard"><p class="dcard-t"><i class="fas fa-map-pin"></i> พิกัดที่ตั้ง</p>'
+        + '<div class="dg" style="margin-bottom:12px;">'
+        + dRow('LATITUDE', p.lat || '-')
+        + dRow('LONGITUDE', p.lon || '-')
+        + '</div>'
+        + (mapSrc
+            ? '<iframe class="map-frame" src="' + mapSrc + '" allowfullscreen loading="lazy"></iframe>'
+              + '<div style="text-align:right;margin-top:6px;">'
+              + '<a href="https://maps.google.com/?q=' + p.lat + ',' + p.lon + '" target="_blank" style="font-size:12px;color:#3498db;">'
+              + '<i class="fas fa-external-link-alt"></i> เปิดใน Google Maps</a></div>'
+            : '<div class="no-map"><i class="fas fa-map-signs fa-2x"></i> ไม่มีข้อมูลพิกัด</div>'
+          )
+        + '</div>';
+    document.getElementById('btnEditFromDetail').style.display = IS_ADMIN ? '' : 'none';
+    document.getElementById('detailModal').classList.add('open');
+}
+function dRow (label, val, raw) {
+    return '<div class="df"><span class="dlb">' + label + '</span>'
+         + (raw ? val : '<div class="dv">' + h(String(val || '-')) + '</div>')
+         + '</div>';
+}
+function closeDetailModal () { document.getElementById('detailModal').classList.remove('open'); }
+function editFromDetail () { closeDetailModal(); openEditModal(DETAIL_ID); }
+
+/* ══════════════════════════════════════════════
+   Edit Modal (Admin) — บันทึกลง DB
+══════════════════════════════════════════════ */
+function openEditModal (id) {
+    EDIT_ID = id;
+    var newFields = ['ef-station_code','ef-chanod','ef-owner_dept','ef-tax_year'];
+    if (id === null) {
+        document.getElementById('editTitle').innerHTML = '<i class="fas fa-plus-circle" style="color:#27ae60;"></i> เพิ่มรายการ Property';
+        ['ef-name','ef-amphoe','ef-changwat','ef-landType','ef-area','ef-docRight',
+         'ef-lat','ef-lon','ef-tax','ef-tamlae','ef-suggestion','ef-note','ef-items'].concat(newFields).forEach(function (fid) {
+            document.getElementById(fid).value = '';
+        });
+        document.getElementById('ef-rent').value     = 0;
+        document.getElementById('ef-appraise').value = 0;
+        document.getElementById('ef-status').value   = 'ใช้งานเต็มพื้นที่';
+    } else {
+        var p = DATA.find(function (x) { return x.id === id; });
+        if (!p) return;
+        document.getElementById('editTitle').innerHTML = '<i class="fas fa-edit" style="color:#f39c12;"></i> แก้ไขข้อมูล Property';
+        document.getElementById('ef-name').value          = p.name          || '';
+        document.getElementById('ef-amphoe').value        = p.amphoe         || '';
+        document.getElementById('ef-changwat').value      = p.changwat       || '';
+        document.getElementById('ef-landType').value      = p.landType       || '';
+        document.getElementById('ef-area').value          = p.area           || '';
+        document.getElementById('ef-docRight').value      = p.docRight       || '';
+        document.getElementById('ef-rent').value          = p.rent           || 0;
+        document.getElementById('ef-appraise').value      = p.appraise       || 0;
+        document.getElementById('ef-lat').value           = p.lat            || '';
+        document.getElementById('ef-lon').value           = p.lon            || '';
+        document.getElementById('ef-status').value        = p.status         || 'ใช้งานเต็มพื้นที่';
+        document.getElementById('ef-tax').value           = p.tax            || '';
+        document.getElementById('ef-tamlae').value        = p.tamlae         || '';
+        document.getElementById('ef-suggestion').value    = p.suggestion      || '';
+        document.getElementById('ef-note').value          = p.note           || '';
+        document.getElementById('ef-items').value         = p.items          || '';
+        document.getElementById('ef-station_code').value  = p.station_code   || '';
+        document.getElementById('ef-chanod').value        = p.chanod          || '';
+        document.getElementById('ef-owner_dept').value    = p.owner_dept      || '';
+        document.getElementById('ef-tax_year').value      = p.tax_year        || '';
+    }
+    document.getElementById('editModal').classList.add('open');
+}
+function closeEditModal () { document.getElementById('editModal').classList.remove('open'); }
+
+async function saveItem () {
+    var name = document.getElementById('ef-name').value.trim();
+    if (!name) { alert('⚠️ กรุณากรอกชื่อที่ตั้ง'); return; }
+
+    var payload = {
+        name:         name,
+        amphoe:       document.getElementById('ef-amphoe').value.trim(),
+        changwat:     document.getElementById('ef-changwat').value.trim(),
+        landType:     document.getElementById('ef-landType').value.trim(),
+        area:         document.getElementById('ef-area').value.trim(),
+        docRight:     document.getElementById('ef-docRight').value.trim(),
+        rent:         parseFloat(document.getElementById('ef-rent').value)     || 0,
+        appraise:     parseFloat(document.getElementById('ef-appraise').value) || 0,
+        lat:          parseFloat(document.getElementById('ef-lat').value)      || 0,
+        lon:          parseFloat(document.getElementById('ef-lon').value)      || 0,
+        status:       document.getElementById('ef-status').value,
+        tax:          document.getElementById('ef-tax').value.trim(),
+        tamlae:       document.getElementById('ef-tamlae').value.trim(),
+        suggestion:   document.getElementById('ef-suggestion').value.trim(),
+        note:         document.getElementById('ef-note').value.trim(),
+        items:        document.getElementById('ef-items').value.trim(),
+        station_code: document.getElementById('ef-station_code').value.trim(),
+        chanod:       document.getElementById('ef-chanod').value.trim(),
+        owner_dept:   document.getElementById('ef-owner_dept').value.trim(),
+        tax_year:     document.getElementById('ef-tax_year').value.trim()
+    };
+
+    try {
+        var url, body;
+        if (EDIT_ID !== null) {
+            // UPDATE
+            url  = 'api_properties.php';
+            body = Object.assign({ id: EDIT_ID }, payload);
+        } else {
+            // INSERT ใหม่
+            url  = 'api_properties.php';
+            body = payload;
+        }
+        var res    = await fetch(url, {
+            method:  EDIT_ID !== null ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(body)
+        });
+        var result = await res.json();
+        if (!result.success) throw new Error(result.message);
+
+        alert(EDIT_ID !== null ? '✅ แก้ไขสำเร็จ' : '✅ เพิ่มรายการสำเร็จ');
+        closeEditModal();
+        loadFromDB();
+    } catch (err) {
+        alert('❌ เกิดข้อผิดพลาด: ' + err.message);
+    }
+}
+
+/* ══════════════════════════════════════════════
+   Delete — ลบจาก DB
+══════════════════════════════════════════════ */
+async function deleteItem (id) {
+    var p = DATA.find(function (x) { return x.id === id; });
+    if (!p || !confirm('ต้องการลบ "' + p.name + '" ใช่หรือไม่?')) return;
+    try {
+        var res    = await fetch('api_properties.php', {
+            method:  'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ id: id })
+        });
+        var result = await res.json();
+        if (!result.success) throw new Error(result.message);
+        alert('✅ ลบสำเร็จ');
+        loadFromDB();
+    } catch (err) {
+        alert('❌ เกิดข้อผิดพลาด: ' + err.message);
+    }
+}
+
+/* ══════════════════════════════════════════════
+   Close modal on backdrop click
+══════════════════════════════════════════════ */
+['editModal','detailModal'].forEach(function (mid) {
+    document.getElementById(mid).addEventListener('click', function (e) {
+        if (e.target === this) this.classList.remove('open');
+    });
+});
+
+/* ══════════════════════════════════════════════
+   Image Popup Modal
+══════════════════════════════════════════════ */
+function openImgModal (id, type) {
+    var p = DATA.find(function (x) { return x.id === id; });
+    if (!p) return;
+    var images = type === 'items' ? p.images_items : p.images_chanod;
+    var label  = type === 'items' ? '🏗️ สิ่งปลูกสร้าง' : '📄 โฉนดและผังบริเวณที่ดิน';
+    document.getElementById('imgModalLabel').textContent = label + ' — ' + h(p.name);
+    var grid = document.getElementById('imgGrid');
+    if (!images || !images.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#bbb;padding:30px;font-size:13px;">ยังไม่มีรูปภาพในระบบ</div>';
+    } else {
+        grid.innerHTML = images.map(function (img) {
+            return '<div class="img-thumb" onclick="openFullscreen(\'' + img.url + '\')">'
+                 + '<img src="' + img.url + '" alt="' + h(img.name || '') + '" onerror="this.src=\'img/no-image.png\'">'
+                 + '<div class="img-thumb-name">' + h(img.name || 'ไม่มีชื่อ') + '</div>'
+                 + '</div>';
+        }).join('');
+    }
+    document.getElementById('imgModal').classList.add('open');
+}
+function closeImgModal () { document.getElementById('imgModal').classList.remove('open'); }
+function openFullscreen (url) {
+    document.getElementById('imgFullImg').src = url;
+    document.getElementById('imgFullscreen').classList.add('open');
+}
+document.getElementById('imgModal').addEventListener('click', function (e) {
+    if (e.target === this) closeImgModal();
+});
+
+/* ══════════════════════════════════════════════
+   Init
+══════════════════════════════════════════════ */
+setTimeout(function () {
+    applyRole();
+    loadFromDB();   // โหลดจาก DB ทันทีที่เปิดหน้า
+}, 900);
+</script>
+
+<script>
+// แสดงชื่อ / Email ใน Sidebar จาก localStorage
+(function () {
+    try {
+        var u = JSON.parse(localStorage.getItem('userData'));
+        if (u) {
+            var n = document.getElementById('sidebarUsername');
+            var em = document.getElementById('sidebarEmail');
+            if (n && u.username) n.textContent = u.username;
+            if (em && u.email)   em.textContent = u.email;
+        }
+    } catch (e) {}
+})();
+</script>
+
+</body>
+</html>

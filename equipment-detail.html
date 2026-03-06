@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Detail</title> 
+    <link rel="stylesheet" href="equipment-style.css"> 
+    <link rel="stylesheet" href="stations-styles.css"> 
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js"></script> 
+    <script src="devtools-guard.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- ===== Sidebar ===== -->
+    <div class="sidebar" id="sidebar">
+        <div class="admin-header">
+            <div class="admin-avatar"><i class="fas fa-user"></i></div> <!-- Admin Avatar -->
+            <div class="admin-name" id="sidebarUsername">Admin</div>
+            <div class="admin-email" id="sidebarEmail"></div>
+        </div>
+        
+        <!-- Pages Section -->
+                        <div class="menu-section-title">Pages</div>
+
+                <div class="menu-item">
+                    <a href="index.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">หน้าหลัก</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="maeta_t.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">แม่ทา(T)</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="lamphun1.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">ลำพูน1</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="makhueachae.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">มะเขือแจ้</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="umong.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">อุโมงค์</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="nikhom.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">นิคมลำพูน</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="lamphun2.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">ลำพูน2</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="pasak.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">ป่าสัก(ลำพูน)</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="maeta_r.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">แม่ทา(R)</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="thakat.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">ทากาศ</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="sritia.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">ศรีเตี้ย</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="li.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">ลี้</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="muangsampi.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">ม่วงสามปี</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="huaipuchek_r.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">ห้วยปูเจ็ก(R)</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="thunghuachang_t.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">ทุ่งหัวช้าง(T)</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="thunghuachang_r.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">ทุ่งหัวช้าง(R)</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="banpuang.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">บ้านปวง</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="pasang.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">ป่าซาง</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="banruan.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">บ้านเรือน</span>
+                    </a>
+                </div> 
+
+                <div class="menu-item">
+                    <a href="banthi.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">บ้านธิ</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="wiangnonglong.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">เวียงหนองล่อง</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="wangphang.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">วังผาง</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="banhong.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width: 20px; text-align: center;"></i> 
+                        <span style="flex: 1;">บ้านโฮ่ง</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a href="khuntannoi_r.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; width: 100%; gap: 10px;">
+                        <i class="fas fa-building" style="width :20px ; text-align :center ;"></i> 
+                        <span style= "flex :1 ;">ขุนตาลน้อย(R)</span>
+                    </a>
+                </div>
+        
+        <div class="logo">
+            <img src="img/logo.png" alt="Logo">
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <button class="toggle-sidebar" id="toggleSidebar"><i class="fas fa-bars"></i></button>
+            <div class="breadcrumb">อุปกรณ์</div>
+                <div style="display: flex; gap: 15px; align-items: center;"> <!-- Added flex container -->
+                    <button class="logout-btn" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+        
+        
+       <div class="category-section">
+    <h2 class="section-title">หมวดหมู่</h2>
+    <div class="equipment-grid">    
+        <div class="equipment-item" onclick="switchCategory('air')">
+            <div class="stat-card-menu" style="background-image: url('img/air.png');"></div>
+            <div class="equipment-name">Air </div>
+        </div>
+        
+        <div class="equipment-item" onclick="switchCategory('battery')">
+            <div class="stat-card-menu" style="background-image: url('img/battery.png');"></div>
+            <div class="equipment-name">Battery</div>
+        </div>
+        
+        <div class="equipment-item" onclick="switchCategory('generator')">
+            <div class="stat-card-menu" style="background-image: url('img/generator.png');"></div>
+            <div class="equipment-name">Generator</div>
+        </div>
+        
+        <div class="equipment-item" onclick="switchCategory('transformer')">
+           <div class="stat-card-menu" style="background-image: url('img/transformer.png');"></div>
+            <div class="equipment-name">Transformer</div>
+        </div>
+        
+        <div class="equipment-item" onclick="switchCategory('rectifier')">
+            <div class="stat-card-menu" style="background-image: url('img/Rectifier.png');"></div>
+            <div class="equipment-name">Rectifier</div>
+        </div>
+        
+        <div class="equipment-item" onclick="switchCategory('peameter')">
+            <div class="stat-card-menu" style="background-image: url('img/PEA-Meter.png');"></div>
+            <div class="equipment-name">PEA Meter</div>
+        </div>
+        
+        <div class="equipment-item" onclick="switchCategory('solarcell')">
+            <div class="stat-card-menu" style="background-image: url('img/Solar-Cell.png');"></div>
+            <div class="equipment-name">Solar Cell</div>
+        </div>
+    </div>
+</div>
+
+        <h2 class="section-title" id="inventoryTitle">Air Conditioner</h2>
+
+        <div class="inventory-container">
+            <div class="table-header">
+                <input type="text" class="search-box" id="eqSearchInput" placeholder="ค้นหา รหัสสินทรัพย์,Serial Number...">
+                <button class="add-btn" id="addExcelBtn"><i class="fas fa-plus"></i> Import Excel</button>
+                
+                <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display: none;">
+                
+            </div>
+
+            <div class="table-wrapper">
+                <table id="eqTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th> 
+                            <th>รหัสสินทรัพย์ใหม่</th>
+                            <th>รหัสสินทรัพย์ย่อย</th>
+                            <th>รหัสสินทรัพย์เดิม</th>
+                            <th>คำอธิบายของสินทรัพย์</th>
+                            <th>Serial Number</th>
+                            <th>Cap.date</th>
+                            <th>ปริมาณ</th>
+                            <th>Unit</th>
+                            <th>มูลค่าการได้มา</th>
+                            <th>มูลค่าตามบัญชี</th>
+                            <th>ศ.ต้นทุน</th>
+                            <th>ที่ตั้ง</th>
+                            <th>รหัสศูนย์</th>
+                            <th style="width: 120px;">จัดการ</th>
+                        </tr>
+                    </thead>
+                <tbody id="eqTableBody">
+                </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination">
+                <button id="uploadDBBtn" class="upload-db-btn" style="display: none;">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload to DB
+                </button>
+            </div>
+            
+        </div>
+        
+        <div class="detail-gallery-section">
+            <div class="detail-gallery-content">
+                <div class="metadata-gallery-list">
+                    <h3 class="section-subtitle">รูปภาพ</h3>
+                    <div id="metadataGalleryContainer">
+                        <div class="gallery-metadata-item">Select a unit from the table.</div>
+                    </div>
+                </div>
+
+               <div class="image-viewer-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+        <h3 class="section-subtitle" id="galleryTitle" style="margin: 0;">รูปภาพที่เกี่ยวข้อง</h3>
+        
+        
+    </div>
+
+    <div class="current-unit-viewer" id="currentUnitViewer">
+        <div class="viewer-placeholder" style="padding: 20px; color: #999; text-align: center;">
+            กรุณาเลือกรายการในตารางเพื่อดูหรือเพิ่มรูปภาพ
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="equipment-scripts.js"></script>
+
+<script>
+    (function() {
+        try {
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            if (userData) {
+                const nameEl  = document.getElementById('sidebarUsername');
+                const emailEl = document.getElementById('sidebarEmail');
+                if (nameEl  && userData.username) nameEl.textContent  = userData.username;
+                if (emailEl && userData.email)    emailEl.textContent = userData.email;
+            }
+        } catch(e) {}
+    })();
+</script>
+</body>
+</html>

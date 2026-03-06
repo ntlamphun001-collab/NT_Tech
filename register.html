@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NT.Tech - สมัครสมาชิก</title>
+    <link rel="stylesheet" href="login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- ✅ พื้นหลัง: ใช้ bg.png เต็มจอ -->
+    <div class="bg-layer">
+        <img src="img/bg.png" class="bg" alt="">
+    </div>
+
+    <div class="container">
+        <div class="left-box">
+            <img src="img/icon.png" class="user-icon" alt="icon">
+            <h1>สมัครสมาชิก</h1>
+            <h2>กรอกข้อมูลเพื่อสร้างบัญชีใหม่</h2>
+
+            <label>ชื่อผู้ใช้</label>
+            <input type="text" class="input" id="usernameInput" placeholder="ชื่อผู้ใช้">
+
+            <label>อีเมลผู้ใช้งาน</label>
+            <input type="email" class="input" id="emailInput" placeholder="example@email.com">
+
+            <label>รหัสผ่าน</label>
+            <input type="password" class="input" id="passwordInput" placeholder="รหัสผ่าน">
+
+            <label>ยืนยันรหัสผ่าน</label>
+            <input type="password" class="input" id="confirmPasswordInput" placeholder="ยืนยันรหัสผ่าน">
+
+            <button class="login-btn" id="registerBtn">สมัครสมาชิก</button>
+            <button class="back-btn" id="backBtn">← กลับไปหน้า Login</button>
+        </div>
+    </div>
+
+    <script src="register.js"></script>
+</body>
+</html>

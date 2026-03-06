@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NT.Tech - Login</title>
+    <link rel="stylesheet" href="login.css">
+    <script src="devtools-guard.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- ✅ พื้นหลัง: ใช้ bg.png เต็มจอ -->
+    <div class="bg-layer">
+        <img src="img/bg.png" class="bg" alt="">
+    </div>
+
+    <div class="container">
+        <!-- ฟอร์ม Login -->
+        <div class="left-box">
+            <img src="img/icon.png" class="user-icon" alt="icon">
+            <h1>ยินดีต้อนรับ</h1>
+            <h2>กรุณาล็อกอินเข้าสู่ระบบ</h2>
+
+            <label>ชื่อผู้ใช้</label>
+            <input type="text" class="input" id="emailInput" placeholder="ชื่อผู้ใช้">
+
+            <label>รหัสผ่าน</label>
+            <input type="password" class="input" id="passwordInput" placeholder="รหัสผ่าน">
+
+            <button class="login-btn" id="loginBtn">เข้าสู่ระบบ</button>
+            <button class="register-btn" id="registerBtn">สมัครสมาชิก</button>
+        </div>
+
+        <!-- ❌ ลบ right-box ออกแล้ว (รูปคน + icon ลอย) -->
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>
